@@ -322,6 +322,7 @@ def get_student_notifications(student_id):
 
 
 
+#                ----------------------- Send Message to Admin -----------------------
 
 # Send Message to Admin
 @student_bp.route('/messages', methods=['POST'])
