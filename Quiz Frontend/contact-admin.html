@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        h1, h2 {
+            color: #007BFF;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px 15px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #f7f7f7;
+        }
+
+        tr:hover td {
+            background-color: #eef;
+            cursor: pointer;
+        }
+
+        .no-messages {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Contact with Admin</h1>
+
+    <!-- Send Message to Admin -->
+    <div class="section">
+        <h2>Send Message to Admin</h2>
+        <form id="message-form">
+            <input type="text" id="message-subject" placeholder="Subject" required>
+            <textarea id="message-content" placeholder="Write your message here..." required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+    </div>
+
+    <!-- Messages Sent to Admin -->
+    <div id="message-section">
+        <h2>Messages Sent to Admin</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Message Title</th>
+                    <th>Message Content</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="messages-container">
+                <tr>
+                    <td colspan="4" class="no-messages">Loading messages...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('id');
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const messagesContainer = document.getElementById("messages-container");
+
+            // Function to fetch and display messages
+            const fetchMessages = () => {
+                fetch(`http://127.0.0.1:5000/api/student/messages/${studentId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        messagesContainer.innerHTML = ''; // Clear existing rows
+
+                        if (Array.isArray(data) && data.length > 0) {
+                            data.forEach(msg => {
+                                const messageDate = new Date(msg.created_at);
+                                const row = `
+                                    <tr>
+                                        <td>${msg.subject}</td>
+                                        <td>${msg.content}</td>
+                                        <td>${messageDate.toLocaleDateString()}</td>
+                                        <td>${messageDate.toLocaleTimeString()}</td>
+                                    </tr>
+                                `;
+                                messagesContainer.innerHTML += row;
+                            });
+                        } else {
+                            messagesContainer.innerHTML = `
+                                <tr>
+                                    <td colspan="4" class="no-messages">No messages found.</td>
+                                </tr>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error fetching messages:", error);
+                        messagesContainer.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="no-messages">An error occurred while fetching messages.</td>
+                            </tr>
+                        `;
+                    });
+            };
+
+            // Initial fetch of messages
+            fetchMessages();
+
+            // Handle Message Submission
+            document.getElementById('message-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const subject = document.getElementById('message-subject').value;
+                const content = document.getElementById('message-content').value;
+
+                fetch('http://127.0.0.1:5000/api/student/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sender_id: studentId, subject, content })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                            document.getElementById('message-form').reset();
+                            fetchMessages(); // Update the table with the latest messages
+                        } else if (data.error) {
+                            alert(`Error: ${data.error}`);
+                        }
+                    })
+                    .catch(err => {
+                        alert('Error sending message.');
+                        console.error('Error sending message:', err);
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

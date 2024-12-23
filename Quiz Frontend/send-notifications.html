@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Notifications</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .form-container, .messages-container { margin-bottom: 20px; }
+
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        h3 { margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <h1>Admin Notifications</h1>
+
+    <!-- Send Class Notification -->
+    <div class="form-container">
+        <h3>Send Notification to Class</h3>
+        <form id="class-notification-form">
+            <textarea id="class-message" placeholder="Enter message" required></textarea>
+            <input type="number" id="class-id" placeholder="Class ID" required>
+            <input type="hidden" id="admin-id" value="1"> <!-- Replace with dynamic admin ID -->
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <!-- Send Student Notification -->
+    <div class="form-container">
+        <h3>Send Notification to Student</h3>
+        <form id="student-notification-form">
+            <textarea id="student-message" placeholder="Enter message" required></textarea>
+            <input type="number" id="student-id" placeholder="Student ID" required>
+            <input type="hidden" id="admin-id" value="1"> <!-- Replace with dynamic admin ID -->
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+
+
+    <!-- Class Notifications Table -->
+    <div>
+        <h3>Notifications Sent to Classes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Class Name</th>
+                    <th>Message</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody id="class-notifications-body">
+                <!-- Class notifications will be dynamically loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Student Notifications Table -->
+    <div>
+        <h3>Notifications Sent to Students</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Message</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody id="student-notifications-body">
+                <!-- Student notifications will be dynamically loaded here -->
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+    <script>
+        // Handle Class Notification
+        document.getElementById('class-notification-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const message = document.getElementById('class-message').value;
+            const classId = document.getElementById('class-id').value;
+            const adminId = document.getElementById('admin-id').value;
+
+            fetch('http://127.0.0.1:5000/api/admin/notifications/class', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, class_id: classId, created_by: adminId })
+            }).then(response => response.json()).then(data => {
+                alert(data.message);
+                fetchClassNotifications(); // Refresh notifications
+            });
+        });
+
+        // Handle Student Notification
+        document.getElementById('student-notification-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const message = document.getElementById('student-message').value;
+            const studentId = document.getElementById('student-id').value;
+            const adminId = document.getElementById('admin-id').value;
+
+            fetch('http://127.0.0.1:5000/api/admin/notifications/student', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message, student_id: studentId, created_by: adminId })
+            }).then(response => response.json()).then(data => {
+                alert(data.message);
+                fetchStudentNotifications(); // Refresh notifications
+            });
+        });
+
+
+
+
+
+         // Fetch Class Notifications
+         function fetchClassNotifications() {
+            fetch('http://127.0.0.1:5000/api/admin/notifications/classes')
+                .then(response => response.json())
+                .then(notifications => {
+                    const classNotificationsBody = document.getElementById('class-notifications-body');
+                    classNotificationsBody.innerHTML = ''; // Clear previous content
+
+                    if (Array.isArray(notifications) && notifications.length > 0) {
+                        notifications.forEach(notification => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${notification.class_name}</td>
+                                <td>${notification.notification_message}</td>
+                                <td>${new Date(notification.sent_at).toLocaleString()}</td>
+                            `;
+                            classNotificationsBody.appendChild(row);
+                        });
+                    } else {
+                        classNotificationsBody.innerHTML = '<tr><td colspan="3">No class notifications found.</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching class notifications:', err);
+                    const classNotificationsBody = document.getElementById('class-notifications-body');
+                    classNotificationsBody.innerHTML = '<tr><td colspan="3">Error loading notifications.</td></tr>';
+                });
+        }
+
+        // Fetch Student Notifications
+        function fetchStudentNotifications() {
+            fetch('http://127.0.0.1:5000/api/admin/notifications/students')
+                .then(response => response.json())
+                .then(notifications => {
+                    const studentNotificationsBody = document.getElementById('student-notifications-body');
+                    studentNotificationsBody.innerHTML = ''; // Clear previous content
+
+                    if (Array.isArray(notifications) && notifications.length > 0) {
+                        notifications.forEach(notification => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${notification.student_name}</td>
+                                <td>${notification.notification_message}</td>
+                                <td>${new Date(notification.sent_at).toLocaleString()}</td>
+                            `;
+                            studentNotificationsBody.appendChild(row);
+                        });
+                    } else {
+                        studentNotificationsBody.innerHTML = '<tr><td colspan="3">No student notifications found.</td></tr>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching student notifications:', err);
+                    const studentNotificationsBody = document.getElementById('student-notifications-body');
+                    studentNotificationsBody.innerHTML = '<tr><td colspan="3">Error loading notifications.</td></tr>';
+                });
+        }
+
+        // Fetch both types of notifications
+        function fetchAllNotifications() {
+            fetchClassNotifications();
+            fetchStudentNotifications();
+        }
+
+        // Initial fetch when the page loads
+        document.addEventListener('DOMContentLoaded', fetchAllNotifications);
+
+
+
+
+    </script>
+</body>
+</html>

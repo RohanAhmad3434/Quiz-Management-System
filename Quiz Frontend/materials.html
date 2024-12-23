@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Materials</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .materials-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .error {
+            text-align: center;
+            color: red;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Study Materials</h1>
+    <div class="materials-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Download</th>
+                </tr>
+            </thead>
+            <tbody id="materials-table">
+                <!-- Materials will be dynamically populated -->
+            </tbody>
+        </table>
+        <div class="error" id="error-message"></div>
+    </div>
+
+    <script>
+        const materialsTable = document.getElementById('materials-table');
+        const errorMessage = document.getElementById('error-message');
+
+        // Get student ID from query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('id'); // Replace `id` with dynamic student ID query parameter
+
+        if (!studentId) {
+            alert("Student ID is missing. Please log in again.");
+            window.location.href = "index.html";
+        } else {
+            fetch(`http://127.0.0.1:5000/api/student/${studentId}/study-materials`) // Replace with your API endpoint
+                .then(response => response.json())
+                .then(data => {
+                    if (data.study_materials && data.study_materials.length > 0) {
+                        materialsTable.innerHTML = ''; // Clear existing table data
+                        data.study_materials.forEach(material => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${material.title}</td>
+                                <td>${material.description}</td>
+                                <td><a href="${material.file_path}" target="_blank">Download</a></td>
+                            `;
+                            materialsTable.appendChild(row);
+                        });
+                    } else {
+                        errorMessage.textContent = 'No study materials found for your class.';
+                    }
+                })
+                .catch(error => {
+                    errorMessage.textContent = 'Error fetching study materials.';
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>

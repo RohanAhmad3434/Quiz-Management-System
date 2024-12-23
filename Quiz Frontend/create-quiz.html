@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2 {
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .form-section {
+            background-color: #fff;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 80%;
+            max-width: 800px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input, textarea, select, button {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-size: 1.1rem;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+
+        td button {
+            background-color: #28a745;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        td button:hover {
+            background-color: #218838;
+        }
+
+        td button.delete {
+            background-color: #dc3545;
+        }
+
+        td button.delete:hover {
+            background-color: #c82333;
+        }
+
+        .form-section select, .form-section input[type="checkbox"] {
+            width: auto;
+            display: inline-block;
+        }
+
+        .form-section input[type="text"], .form-section textarea {
+            width: 100%;
+        }
+
+        .form-section ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .form-section ul li {
+            padding: 5px;
+            background-color: #f8f9fa;
+            margin-bottom: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .form-section ul li span {
+            margin-left: 10px;
+            color: #007bff;
+        }
+
+        #admin-info {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Create and Manage Quizzes</h1>
+    <div id="admin-info" style="display: none;"></div>
+
+    <!-- Quiz Creation -->
+    <div class="form-section">
+        <h2>Create Quiz</h2>
+        <form id="create-quiz-form">
+            <label for="quiz-title">Quiz Title:</label>
+            <input type="text" id="quiz-title" required><br><br>
+            <label for="quiz-description">Description:</label>
+            <textarea id="quiz-description"></textarea><br><br>
+            <label for="attempt-limit">Attempt Limit:</label>
+            <input type="number" id="attempt-limit" value="3" required><br><br>
+            <button type="submit">Create Quiz</button>
+        </form>
+    </div>
+
+    <!-- Quiz List -->
+    <div class="form-section quiz-list">
+        <h2>Quiz List</h2>
+        <table border="1" cellspacing="0" cellpadding="10" id="quiz-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>Attempt Limit</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <h2>Manage Questions</h2>
+ 
+
+    <!-- All Questions List -->
+    <div class="form-section question-list">
+        <h2>All Questions</h2>
+        <table border="1" cellspacing="0" cellpadding="10" id="question-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Question</th>
+                    <th>Quiz Title</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- Add Question -->
+    <div class="form-section">
+        <h2>Add Question</h2>
+        <form id="create-question-form">
+            <label for="quiz-select">Select Quiz:</label>
+            <select id="quiz-select" required>
+                <option value="">Select a quiz</option>
+            </select><br><br>
+            <label for="question-text">Question:</label>
+            <input type="text" id="question-text" required><br><br>
+            <button type="submit">Add Question</button>
+        </form>
+    </div>
+
+
+
+    <div class="form-section">
+        <h2>All Options</h2>
+        <table border="1" cellspacing="0" cellpadding="10" id="option-table">
+            <thead>
+                <tr>
+                    <th>Option ID</th>
+                    <th>Option Text</th>
+                    <th>Is Correct</th>
+                    <th>Question Text</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+    
+
+    <!-- Add Options -->
+    <div class="form-section">
+        <h2>Add Options</h2>
+        <select id="question-select">
+            <option value="">Select a question to add options</option>
+        </select>
+        <form id="add-option-form">
+            <label for="option-text">Option:</label>
+            <input type="text" id="option-text" required><br><br>
+            <label>
+                <input type="checkbox" id="is-correct"> Correct Option
+            </label><br><br>
+            <button type="submit">Add Option</button>
+        </form>
+        <ul id="option-list"></ul>
+    </div>
+
+    <script>
+        const baseUrl = 'http://127.0.0.1:5000/api/admin';
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminId = urlParams.get('id');
+
+        if (!adminId) {
+            alert('Admin ID not found. Redirecting to admin page.');
+            window.location.href = 'admin.html';
+        }
+
+        async function loadQuizzes() {
+            try {
+                const response = await fetch(`${baseUrl}/quiz/all`, {
+                    method: 'GET'
+                });
+                const quizzes = await response.json();
+        
+                // Populate quiz table
+                const quizTableBody = document.querySelector('#quiz-table tbody');
+                quizTableBody.innerHTML = '';
+        
+                if (response.ok) {
+                    quizzes.forEach((quiz) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${quiz.id}</td>
+                            <td>${quiz.title}</td>
+                            <td>${quiz.description || 'N/A'}</td>
+                            <td>${quiz.attempt_limit}</td>
+                            <td>
+                                <button onclick="deleteQuiz(${quiz.id})">Delete</button>
+                                <button onclick="updateQuiz(${quiz.id}, '${quiz.title}', '${quiz.description}', ${quiz.attempt_limit})">Update</button>
+                            </td>
+                        `;
+                        quizTableBody.appendChild(row);
+                    });
+                } else {
+                    quizTableBody.innerHTML = '<tr><td colspan="5">No quizzes found.</td></tr>';
+                }
+        
+                // Populate quiz dropdown
+                const quizSelect = document.getElementById('quiz-select');
+                quizSelect.innerHTML = '<option value="">Select a quiz</option>';
+                quizzes.forEach((quiz) => {
+                    quizSelect.innerHTML += `<option value="${quiz.id}">${quiz.title}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading quizzes:', error);
+            }
+        }
+        
+        
+
+
+        // Create quiz
+        document.getElementById('create-quiz-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('quiz-title').value;
+            const description = document.getElementById('quiz-description').value;
+            const attemptLimit = document.getElementById('attempt-limit').value;
+
+            try {
+                const response = await fetch(`${baseUrl}/quiz/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        attempt_limit: attemptLimit,
+                        created_by: adminId,
+                    }),
+                });
+
+                if (response.ok) {
+                    alert('Quiz created successfully');
+                    loadQuizzes();
+                } else {
+                    const result = await response.json();
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error creating quiz:', error);
+            }
+        });
+
+        // Delete quiz
+        async function deleteQuiz(quizId) {
+            if (!confirm('Are you sure you want to delete this quiz?')) return;
+
+            try {
+                const response = await fetch(`${baseUrl}/quiz/${quizId}`, { method: 'DELETE' });
+
+                if (response.ok) {
+                    alert('Quiz deleted successfully');
+                    loadAllQuestions(); // Refresh the questions list
+                    loadQuizzes();
+                } else {
+                    const result = await response.json();
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error deleting quiz:', error);
+            }
+        }
+
+        // Update quiz
+        function updateQuiz(quizId, title, description, attemptLimit) {
+            const updatedTitle = prompt('Enter new title:', title);
+            const updatedDescription = prompt('Enter new description:', description);
+            const updatedAttemptLimit = prompt('Enter new attempt limit:', attemptLimit);
+
+            if (!updatedTitle) return alert('Quiz title is required.');
+
+            const updatedQuiz = {
+                title: updatedTitle,
+                description: updatedDescription || '',
+                attempt_limit: updatedAttemptLimit || 3,
+            };
+
+            fetch(`${baseUrl}/quiz/${quizId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedQuiz),
+            })
+                .then((response) => {
+                    if (response.ok) {
+                        alert('Quiz updated successfully');
+                        loadQuizzes();
+                        loadAllQuestions(); // Refresh the questions list
+                    } else {
+                        return response.json().then((data) => {
+                            throw new Error(data.error || 'Failed to update quiz');
+                        });
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error updating quiz:', error);
+                    alert(error.message);
+                });
+        }
+
+
+
+
+        async function loadAllQuestions() {
+            try {
+                const response = await fetch(`${baseUrl}/questions`);
+                const questions = await response.json();
+        
+                const questionTableBody = document.querySelector('#question-table tbody');
+                const questionSelect = document.getElementById('question-select'); // Dropdown for adding options
+                questionTableBody.innerHTML = '';
+                questionSelect.innerHTML = '<option value="">Select a question to add options</option>'; // Reset dropdown
+        
+                if (response.ok) {
+                    questions.forEach((question) => {
+                        // Add to question table
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${question.id}</td>
+                            <td>${question.question}</td>
+                            <td>${question.quiz_title}</td>
+                        `;
+                        questionTableBody.appendChild(row);
+        
+                        // Add to question dropdown
+                        const option = document.createElement('option');
+                        option.value = question.id;
+                        option.textContent = question.question;
+                        questionSelect.appendChild(option);
+                    });
+                } else {
+                    questionTableBody.innerHTML = `<tr><td colspan="3">${questions.message || 'Error fetching questions'}</td></tr>`;
+                }
+            } catch (error) {
+                console.error('Error loading questions:', error);
+            }
+        }
+        
+
+        
+
+        
+        // Add question
+        document.getElementById('create-question-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const quizId = document.getElementById('quiz-select').value;
+            const questionText = document.getElementById('question-text').value.trim();
+
+            if (!quizId) return alert('Please select a quiz.');
+            if (!questionText) return alert('Please enter a question. ffff');
+            console.log('Submitting question:', questionText);
+
+         
+            try {
+                const response = await fetch(`${baseUrl}/quiz/${quizId}/question`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: questionText }), 
+                });
+
+                if (response.ok) {
+                    alert('Question added successfully');
+                    loadAllQuestions(); // Refresh the questions list
+                } else {
+                    const result = await response.json();
+                    alert(`Error: ${result.error || 'Failed to add question'}`);
+                }
+            } catch (error) {
+                console.error('Error adding question:', error);
+            }
+        });
+
+      
+
+    
+
+        // Add option
+        document.getElementById('add-option-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const questionId = document.getElementById('question-select').value;
+            const text = document.getElementById('option-text').value;
+            const isCorrect = document.getElementById('is-correct').checked || false;
+
+            if (!questionId) return alert('Please select a question.');
+
+            try {
+                const response = await fetch(`${baseUrl}/options/create`, {
+                     method: 'POST',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                     question_id: questionId, // Use the correct key as expected by the API
+                     option_text: text,       // Ensure the field names align with the API
+                     is_correct: isCorrect,   // Default to false if not provided 
+                     }),
+                });
+
+                if (response.ok) {
+                    alert('Option added successfully');
+                    // Refresh options if necessary
+                    loadAllOptions();
+                } else {
+                    const result = await response.json();
+                    alert(`Error: ${result.error}`);
+                }
+            } catch (error) {
+                console.error('Error adding option:', error);
+            }
+        });
+
+
+        async function loadAllOptions() {
+            try {
+                const response = await fetch(`${baseUrl}/options`);
+                const options = await response.json();
+        
+                const optionTableBody = document.querySelector('#option-table tbody');
+                optionTableBody.innerHTML = '';
+        
+                if (response.ok) {
+                    options.forEach((option) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${option.option_id}</td>
+                            <td>${option.option_text}</td>
+                            <td>${option.is_correct ? 'Yes' : 'No'}</td>
+                            <td>${option.question_text}</td>
+                        `;
+                        optionTableBody.appendChild(row);
+                    });
+                } else {
+                    optionTableBody.innerHTML = `<tr><td colspan="4">${options.message || 'Error fetching options'}</td></tr>`;
+                }
+            } catch (error) {
+                console.error('Error loading options:', error);
+            }
+        }
+        
+        // Call this function during the initial load
+        loadAllOptions();
+        
+
+        // Initial load
+        loadQuizzes();
+          // Initial load
+        loadAllQuestions();
+    </script>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <style>
+
+        /* General Page Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        nav {
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 120px; /* Fixed width for all buttons */
+            height: 50px; /* Fixed height for all buttons */
+            text-align: center;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Logout Button Styling */
+        .logout-button {
+            margin-top: 20px;
+            background-color: #dc3545;
+        }
+
+        .logout-button:hover {
+            background-color: #b02a37;
+        }
+
+        /* Main Content Styling */
+        main {
+            text-align: center;
+            padding: 20px;
+        }
+
+        main p {
+            font-size: 1.2rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Admin Dashboard</h1>
+    </header>
+    <nav>
+        <div class="button-container">
+            <form action="create-quiz.html" method="get">
+                <input type="hidden" name="id" id="admin-id" value="">
+                <button type="submit">Create Quiz</button>
+            </form>
+            <form action="assign-quiz.html" method="get">
+                <button type="submit">Assign Quizzes</button>
+            </form>
+            <form action="export-results.html" method="get">
+                <button type="submit">Export Results</button>
+            </form>
+            <form action="manage-classes.html" method="get">
+                <button type="submit">Manage Classes</button>
+            </form>
+            <form action="upload-resources.html" method="get">
+                <input type="hidden" name="id" id="admin-id" value="">
+                <button type="submit">Upload Study Materials</button>
+            </form>
+            <form action="send-notifications.html" method="get">
+                <button type="submit">Send Notifications</button>
+            </form>
+            <form action="user-management.html" method="get">
+                <button type="submit">Manage Users</button>
+            </form>
+            <form action="messages.html" method="get">
+                <button type="submit">View Messages</button>
+            </form>
+            
+        </div>
+        <div>
+               <!-- Logout Button -->
+            <form action="index.html" method="get">
+                <button class="logout-button" type="submit">Logout</button>
+            </form>
+        </div>
+    </nav>
+    <main>
+        <p>Welcome to the admin panel. Use the above buttons to manage the Quiz System effectively.</p>
+    </main>
+    <script>
+        // Get admin ID from the URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminId = urlParams.get('id');
+
+        // Set the hidden inputs with admin ID
+        const hiddenInputs = document.querySelectorAll('#admin-id');
+        hiddenInputs.forEach(input => {
+            input.value = adminId;
+            console.log("admin id :  ",input.value);   
+        });
+
+        if (!adminId) {
+            alert("Admin ID is missing. Please log in again.");
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

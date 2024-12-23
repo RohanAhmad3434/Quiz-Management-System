@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        #login-form {
+            display: none;
+        }
+
+
+         /* General Styles */
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f3f4f6;
+        }
+
+        header {
+            position: absolute;
+            top: 10px;
+            text-align: center;
+            width: 100%;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: #007BFF;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        main {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #login-form {
+            display: none;
+        }
+
+        /* Form Styles */
+        form {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: inline-block;
+            color: #333;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        #cancel-btn {
+            background-color: #6c757d;
+        }
+
+        #cancel-btn:hover {
+            background-color: #565e64;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Quiz Management System</h1>
+    </header>
+    <h1>Login</h1>
+    <main>
+        <!-- Buttons to choose login as Admin or Student -->
+        <button id="admin-login-btn">Login as Admin</button>
+        <button id="student-login-btn">Login as Student</button>
+
+        <!-- Login Form (Initially Hidden) -->
+        <div id="login-form">
+            <h2>Login</h2>
+            <form id="login-form-action">
+                <label for="email">Email:</label><br>
+                <input type="email" id="email" name="email" required><br><br>
+
+                <label for="password">Password:</label><br>
+                <input type="password" id="password" name="password" required><br><br>
+
+                <button type="submit">Login</button>
+            </form>
+            <button id="cancel-btn">Cancel</button>
+        </div>
+    </main>
+
+    <script>
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const studentLoginBtn = document.getElementById('student-login-btn');
+        const loginForm = document.getElementById('login-form');
+        const cancelBtn = document.getElementById('cancel-btn');
+        let loginType = ''; // To track whether it's Admin or Student login
+
+        // Show login form when Admin button is clicked
+        adminLoginBtn.addEventListener('click', () => {
+            loginType = 'admin';
+            loginForm.style.display = 'block';
+        });
+
+        // Show login form when Student button is clicked
+        studentLoginBtn.addEventListener('click', () => {
+            loginType = 'student';
+            loginForm.style.display = 'block';
+        });
+
+        // Cancel button to hide the login form
+        cancelBtn.addEventListener('click', () => {
+            loginForm.style.display = 'none';
+        });
+
+        // Handle form submission
+        document.getElementById('login-form-action').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            let loginUrl = '';
+            if (loginType === 'admin') {
+                loginUrl = 'http://127.0.0.1:5000/api/admin/login';
+            } else if (loginType === 'student') {
+                loginUrl = 'http://127.0.0.1:5000/api/student/login';
+            }
+
+            const response = await fetch(loginUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(result.message);
+                if (loginType === 'admin') {
+                    window.location.href = 'admin.html?id=' + result.id;
+                } else {
+                    window.location.href = 'student.html?id=' + result.id;
+                }
+            } else {
+                alert(result.error);
+            }
+        });
+    </script>
+</body>
+</html>

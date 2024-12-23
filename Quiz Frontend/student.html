@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    <style>
+
+         /* General Page Styling */
+         body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+
+        nav {
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            width: 150px; /* Fixed button width */
+            height: 50px; /* Fixed button height */
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Logout Button Styling */
+        .logout-button {
+            background-color: #dc3545;
+        }
+
+        .logout-button:hover {
+            background-color: #b02a37;
+        }
+
+        /* Main Content Styling */
+        main {
+            padding: 20px;
+            text-align: center;
+        }
+
+        main h2 {
+            color: #333;
+        }
+
+        main p {
+            font-size: 1.2rem;
+            color: #555;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Student Dashboard</h1>
+    </header>
+    <nav>
+        <div class="button-container">
+            <div class="button-row">
+                <input type="hidden" name="id" id="student-id" value="">
+                <!-- Button to take quizzes -->
+                <form action="quiz.html" method="get">
+                    <input type="hidden" name="id" id="student-id" value="">
+                    <button type="submit">Take Quiz</button>
+                </form>
+                <!-- Button to view quiz results -->
+                <form action="results.html" method="get">
+                    <input type="hidden" name="id" id="student-id" value="">
+                    <button type="submit">View Results</button>
+                </form>
+                <!-- Button to access study materials -->
+                <form action="materials.html" method="get">
+                    <input type="hidden" name="id" id="student-id" value="">
+                    <button type="submit">Study Materials</button>
+                </form>
+                <!-- Button to communicate with the admin -->
+                <form action="contact-admin.html" method="get">
+                    <input type="hidden" name="id" id="student-id" value="">
+                    <button type="submit">Contact Admin</button>
+                </form>
+
+                <!-- Button to view notifications from admin -->
+                <form action="student-notification.html" method="get">
+                    <input type="hidden" name="id" id="student-id" value="">
+                    <button type="submit">View Notification</button>
+                </form>
+            </div>
+            <!-- Button to log out -->
+            <form action="index.html" method="get">
+                <button type="submit" class="logout-button">Logout</button>
+            </form>
+        </div>
+    </nav>
+    <main>
+       
+        <p>Welcome, Use the buttons above to explore your quizzes, results, and resources.</p>
+    </main>
+    <script>
+
+          // Get student ID from the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentId = urlParams.get('id');
+
+    // Set the hidden inputs with student ID
+    const hiddenInputs = document.querySelectorAll('#student-id');
+    hiddenInputs.forEach(input => {
+        input.value = studentId;
+        console.log("Student ID:", input.value);   
+    });
+
+    // Handle missing student ID
+    if (!studentId) {
+        alert("Student ID is missing. Please log in again.");
+        window.location.href = "index.html";
+    }
+    </script>
+
+
+</body>
+</html>

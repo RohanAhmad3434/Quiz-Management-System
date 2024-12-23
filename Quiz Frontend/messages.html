@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Messages For Admin</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>Messages from Students</h1>
+    </header>
+    <main>
+        <!-- View Messages -->
+    <div class="messages-container">
+        <table id="messages-table" border="1" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th>Student Name</th>
+                    <th>Message Title</th>
+                    <th>Message Content</th>
+                    <th>Date & Time</th>
+                </tr>
+            </thead>
+            <tbody id="messages-body">
+                <!-- Messages will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+    </main>
+
+    <script>
+             // Fetch Messages for Admin
+    fetch('http://127.0.0.1:5000/api/admin/messages')
+    .then(response => response.json())
+    .then(messages => {
+        const messagesBody = document.getElementById('messages-body');
+        messagesBody.innerHTML = ''; // Clear existing rows
+
+        if (Array.isArray(messages) && messages.length > 0) {
+            messages.forEach(msg => {
+                const row = document.createElement('tr');
+
+                // Create table cells for each message detail
+                row.innerHTML = `
+                    <td>${msg.student_name}</td>
+                    <td>${msg.message_title}</td>
+                    <td>${msg.message_content}</td>
+                    <td>${new Date(msg.sent_at).toLocaleString()}</td>
+                `;
+
+                messagesBody.appendChild(row);
+            });
+        } else {
+            messagesBody.innerHTML = '<tr><td colspan="4">No messages found.</td></tr>';
+        }
+    })
+    .catch(err => {
+        console.error('Error fetching messages:', err);
+        const messagesBody = document.getElementById('messages-body');
+        messagesBody.innerHTML = '<tr><td colspan="4">An error occurred while fetching messages.</td></tr>';
+    });
+    </script>
+</body>
+</html>

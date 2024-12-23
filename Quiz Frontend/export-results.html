@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .results-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Admin: Quiz Results</h1>
+    <div class="results-container" id="results-container">
+        <!-- Results will be dynamically populated here -->
+    </div>
+
+    <script>
+        const baseUrl = 'http://127.0.0.1:5000/api/admin'; // Adjust base URL if needed
+        const resultsContainer = document.getElementById('results-container');
+
+        // Fetch and display quiz results
+        fetch(`${baseUrl}/results`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    resultsContainer.innerHTML = `<p style="color:red; text-align:center;">${data.error}</p>`;
+                } else if (Object.keys(data).length === 0) {
+                    resultsContainer.innerHTML = `<p style="text-align:center;">No results found.</p>`;
+                } else {
+                    for (const quizTitle in data) {
+                        // Create a section for each quiz title
+                        const quizSection = document.createElement('div');
+                        quizSection.innerHTML = `
+                            <div class="quiz-title">${quizTitle}</div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Student Name</th>
+                                        <th>Score</th>
+                                        <th>Feedback</th>
+                                        <th>Attempt Number</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data[quizTitle].map(result => `
+                                        <tr>
+                                            <td>${result.student_name}</td>
+                                            <td>${result.score}</td>
+                                            <td>${result.feedback}</td>
+                                            <td>${result.attempt_number}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        `;
+                        resultsContainer.appendChild(quizSection);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching results:', error);
+                resultsContainer.innerHTML = `<p style="color:red; text-align:center;">An error occurred while fetching the results. Please try again later.</p>`;
+            });
+    </script>
+</body>
+</html>

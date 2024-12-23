@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Notifications</title>
+    <style>
+    
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9; /* Light background */
+            color: #333; /* Text color for better contrast */
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 2em;
+            color: #007BFF; /* Highlight header */
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            background-color: #fff; /* White background for table */
+        }
+        
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px 15px; /* Slightly increased padding for better spacing */
+            text-align: left;
+            font-size: 1em;
+        }
+        
+        th {
+            background-color: #007BFF; /* Header background color */
+            color: #fff; /* White text for header */
+            text-transform: uppercase; /* Header text in uppercase */
+            letter-spacing: 0.05em; /* Subtle spacing for header text */
+        }
+        
+        td {
+            background-color: #fdfdfd; /* Light background for table rows */
+        }
+        
+        tr:nth-child(even) td {
+            background-color: #f7f7f7; /* Alternate row color for better readability */
+        }
+        
+        tr:hover td {
+            background-color: #eef; /* Highlight row on hover */
+            cursor: pointer;
+        }
+        
+        p {
+            font-size: 1em;
+            color: #555;
+        }
+        
+        .notification {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #e9f5ff; /* Light blue for notifications */
+            border: 1px solid #007BFF;
+            margin-bottom: 10px;
+        }
+        
+
+
+        
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Notifications</h1>
+    </header>
+
+    <!-- Notifications Section -->
+    <div class="section">
+        <table>
+            <thead>
+                <tr>
+                    <th>Message Content</th>
+                    <th>Date</th>
+                    <th>Time</th>
+                </tr>
+            </thead>
+            <tbody id="notifications-table-body">
+                <tr>
+                    <td colspan="3">Loading notifications...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('id');
+
+        // Fetch Notifications for Student
+        fetch(`http://127.0.0.1:5000/api/student/${studentId}/notifications`)
+            .then(response => response.json())
+            .then(notifications => {
+                const tableBody = document.getElementById('notifications-table-body');
+                tableBody.innerHTML = ''; // Clear loading message
+
+                if (Array.isArray(notifications) && notifications.length > 0) {
+                    notifications.forEach(notification => {
+                        const row = document.createElement('tr');
+                        const notificationDate = new Date(notification.created_at);
+                        row.innerHTML = `
+                            <td>${notification.message}</td>
+                            <td>${notificationDate.toLocaleDateString()}</td>
+                            <td>${notificationDate.toLocaleTimeString()}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = '<tr><td colspan="3">No notifications found.</td></tr>';
+                }
+            })
+            .catch(err => {
+                console.error('Error fetching notifications:', err);
+                const tableBody = document.getElementById('notifications-table-body');
+                tableBody.innerHTML = '<tr><td colspan="3">Error loading notifications.</td></tr>';
+            });
+    </script>
+</body>
+</html>

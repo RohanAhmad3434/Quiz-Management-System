@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Assignments</title>
+    <script>
+        const baseUrl = "http://127.0.0.1:5000/api/admin"; // Replace with your backend URL
+
+        // Populate dropdowns for Students, Classes, and Quizzes
+        async function populateDropdowns() {
+            await populateStudentsDropdown();
+            await populateClassesDropdown();
+            await populateQuizzesDropdown();
+        }
+
+        async function populateStudentsDropdown() {
+            const studentSelect = document.getElementById('student-select');
+            studentSelect.innerHTML = ''; // Clear previous options
+            try {
+                const response = await fetch(`${baseUrl}/students`);
+                const students = await response.json();
+                students.forEach((student) => {
+                    const option = document.createElement('option');
+                    option.value = student.id;
+                    option.textContent = `${student.name} (${student.email})`;
+                    studentSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching students:", error);
+            }
+        }
+
+        async function populateClassesDropdown() {
+            const classSelect = document.getElementById('class-select');
+            classSelect.innerHTML = ''; // Clear previous options
+            try {
+                const response = await fetch(`${baseUrl}/classes`);
+                const classes = await response.json();
+                classes.forEach((cls) => {
+                    const option = document.createElement('option');
+                    option.value = cls.id;
+                    option.textContent = cls.name;
+                    classSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error fetching classes:", error);
+            }
+        }
+
+        async function populateQuizzesDropdown() {
+            const studentQuizSelect = document.getElementById('student-quiz-select');
+            const classQuizSelect = document.getElementById('class-quiz-select');
+            studentQuizSelect.innerHTML = ''; // Clear previous options
+            classQuizSelect.innerHTML = ''; // Clear previous options
+            try {
+                const response = await fetch(`${baseUrl}/quiz/all`);
+                const quizzes = await response.json();
+                quizzes.forEach((quiz) => {
+                    const option1 = document.createElement('option');
+                    option1.value = quiz.id;
+                    option1.textContent = quiz.title;
+
+                    const option2 = option1.cloneNode(true); // Clone for class dropdown
+                    studentQuizSelect.appendChild(option1);
+                    classQuizSelect.appendChild(option2);
+                });
+            } catch (error) {
+                console.error("Error fetching quizzes:", error);
+            }
+        }
+
+        // Fetch and populate data tables for Quiz-Student and Quiz-Class Assignments
+        async function fetchQuizStudentAssignments() {
+            const tableBody = document.getElementById('quiz-student-assignments-body');
+            tableBody.innerHTML = ''; // Clear previous data
+            try {
+                const response = await fetch(`${baseUrl}/assignments`);
+                const data = await response.json();
+                data.forEach((assignment) => {
+                    const row = `
+                        <tr>
+                            <td>${assignment.assignment_id}</td>
+                            <td>${assignment.quiz_title}</td>
+                            <td>${assignment.student_name}</td>
+                            <td>
+                                <button onclick="deleteQuizStudentAssignment(${assignment.assignment_id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error fetching Quiz-Student Assignments:", error);
+            }
+        }
+
+        async function fetchQuizClassAssignments() {
+            const tableBody = document.getElementById('quiz-class-assignments-body');
+            tableBody.innerHTML = ''; // Clear previous data
+            try {
+                const response = await fetch(`${baseUrl}/class-assignments`);
+                const data = await response.json();
+                data.forEach((assignment) => {
+                    const row = `
+                        <tr>
+                            <td>${assignment.assignment_id}</td>
+                            <td>${assignment.quiz_title}</td>
+                            <td>${assignment.class_name}</td>
+                            <td>
+                                <button onclick="deleteQuizClassAssignment(${assignment.assignment_id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error fetching Quiz-Class Assignments:", error);
+            }
+        }
+
+        // Assign Quiz to Student
+        async function assignQuizToStudent() {
+            const quizId = document.getElementById('student-quiz-select').value;
+            const studentId = document.getElementById('student-select').value;
+
+            if (!quizId || !studentId) return alert("Please select both Quiz and Student.");
+
+            try {
+                const response = await fetch(`${baseUrl}/assignments/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ quiz_id: quizId, student_id: studentId }),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    fetchQuizStudentAssignments();
+                } else {
+                    alert(result.error || "Error assigning quiz.");
+                }
+            } catch (error) {
+                console.error("Error assigning quiz to student:", error);
+            }
+        }
+
+        // Delete Quiz-Student Assignment
+        async function deleteQuizStudentAssignment(assignmentId) {
+            try {
+                const response = await fetch(`${baseUrl}/assignments/${assignmentId}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    fetchQuizStudentAssignments();
+                } else {
+                    alert(result.error || "Error deleting assignment.");
+                }
+            } catch (error) {
+                console.error("Error deleting Quiz-Student Assignment:", error);
+            }
+        }
+
+
+
+                // Assign Quiz to Class
+                async function assignQuizToClass() {
+                    const quizId = document.getElementById('class-quiz-select').value;
+                    const classId = document.getElementById('class-select').value;
+        
+                    if (!quizId || !classId) return alert("Please select both Quiz and Class.");
+        
+                    try {
+                        const response = await fetch(`${baseUrl}/class-assignments/create`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ quiz_id: quizId, class_id: classId }),
+                        });
+        
+                        const result = await response.json();
+                        if (response.ok) {
+                            alert(result.message);
+                            fetchQuizClassAssignments();
+                        } else {
+                            alert(result.error || "Error assigning quiz.");
+                        }
+                    } catch (error) {
+                        console.error("Error assigning quiz to class:", error);
+                    }
+                }
+        
+                // Delete Quiz-Class Assignment
+                async function deleteQuizClassAssignment(assignmentId) {
+                    try {
+                        const response = await fetch(`${baseUrl}/class-assignments/${assignmentId}`, { method: 'DELETE' });
+                        const result = await response.json();
+                        if (response.ok) {
+                            alert(result.message);
+                            fetchQuizClassAssignments();
+                        } else {
+                            alert(result.error || "Error deleting assignment.");
+                        }
+                    } catch (error) {
+                        console.error("Error deleting Quiz-Class Assignment:", error);
+                    }
+                }
+
+
+
+
+
+        // Initialize the page
+        window.onload = function () {
+            populateDropdowns();
+            fetchQuizStudentAssignments();
+            fetchQuizClassAssignments();
+        };
+    </script>
+</head>
+<body>
+    <h1>Quiz Assignments</h1>
+
+    <!-- Quiz-Student Assignment Section -->
+    <section>
+        <h2>Quiz-Student Assignments</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quiz Title</th>
+                    <th>Student Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="quiz-student-assignments-body"></tbody>
+        </table>
+
+        <h3>Assign Quiz to Student</h3>
+        <label for="student-quiz-select">Quiz:</label>
+        <select id="student-quiz-select"></select>
+
+        <label for="student-select">Student:</label>
+        <select id="student-select"></select>
+
+        <button onclick="assignQuizToStudent()">Assign</button>
+    </section>
+
+    <!-- Quiz-Class Assignment Section -->
+    <section>
+        <h2>Quiz-Class Assignments</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Quiz Title</th>
+                    <th>Class Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="quiz-class-assignments-body"></tbody>
+        </table>
+
+        <h3>Assign Quiz to Class</h3>
+        <label for="class-quiz-select">Quiz:</label>
+        <select id="class-quiz-select"></select>
+
+        <label for="class-select">Class:</label>
+        <select id="class-select"></select>
+
+        <button onclick="assignQuizToClass()">Assign</button>
+    </section>
+</body>
+</html>

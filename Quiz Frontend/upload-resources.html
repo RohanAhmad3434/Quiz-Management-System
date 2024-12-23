@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Study Material</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .upload-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input, select, textarea, button {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+
+        .resources-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table th {
+            background-color: #f2f2f2;
+            color: #333;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 20px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>Upload Study Material</h1>
+    <div class="upload-container">
+        <form id="upload-form">
+            <label for="title">Title:</label>
+            <input type="text" id="title" name="title" placeholder="Enter title" required>
+
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" placeholder="Enter description"></textarea>
+
+            <label for="class_id">Assign to Class:</label>
+            <select id="class_id" name="class_id" required>
+                <!-- Dynamically populated -->
+            </select>
+
+            <label for="file">Select File:</label>
+            <input type="file" id="file" name="file" required>
+
+            <input type="hidden" id="admin_id" name="admin_id" value="1"> <!-- Replace with dynamic admin ID -->
+
+            <button type="submit">Upload</button>
+        </form>
+
+        <div class="message" id="message">
+        </div>
+
+    </div>
+
+
+    <h1>Uploaded Study Materials</h1>
+    <div class="resources-container">
+        <table id="materials-table">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Description</th>
+                    <th>File</th>
+                    <th>Class Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Materials will be dynamically populated here -->
+            </tbody>
+        </table>
+        <div class="error" id="error-message"></div>
+    </div>
+
+
+    <script>
+        const classSelect = document.getElementById('class_id');
+        const uploadForm = document.getElementById('upload-form');
+        const messageDiv = document.getElementById('message');
+        const urlParams = new URLSearchParams(window.location.search);
+        const adminId = urlParams.get('id');
+
+        if (!adminId) {
+            alert('Admin ID not found. Redirecting to admin page.');
+            window.location.href = 'admin.html';
+        }
+
+
+        // Fetch available classes
+      // Fetch available classes
+        fetch('http://127.0.0.1:5000/api/admin/class/classes') // Replace with your API endpoint
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) { // Directly check if data array is non-empty
+                data.forEach(cls => {
+                    const option = document.createElement('option');
+                    option.value = cls.id;
+                    option.textContent = cls.name;
+                    classSelect.appendChild(option);
+                });
+            } else {
+                console.error('No classes found.');
+            }
+        })
+        .catch(error => console.error('Error fetching classes:', error));
+
+
+
+        // Handle form submission
+
+
+        uploadForm.addEventListener('submit', event => {
+            event.preventDefault();
+        
+            const formData = new FormData(uploadForm);
+            fetch('http://127.0.0.1:5000/api/admin/study-materials/upload', { // Replace with your API endpoint
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Show success alert with the API response message
+                    alert(data.message);
+        
+                    messageDiv.textContent = data.message;
+                    messageDiv.style.color = 'green';
+        
+                    // Clear the form after a short delay
+                    setTimeout(() => {
+                        uploadForm.reset();
+                        messageDiv.textContent = '';
+                    }, 3000); // 3-second delay
+                } else if (data.error) {
+                    // Show error message in the message div
+                    messageDiv.textContent = data.error;
+                    messageDiv.style.color = 'red';
+                }
+            })
+            .catch(error => {
+                // Show generic error message
+                messageDiv.textContent = 'An error occurred while uploading.';
+                messageDiv.style.color = 'red';
+                console.error('Error uploading study material:', error);
+            });
+        });
+        
+        
+
+
+
+        const materialsTableBody = document.querySelector('#materials-table tbody');
+        const errorMessage = document.getElementById('error-message');
+
+        // Fetch uploaded study materials
+        fetch('http://127.0.0.1:5000/api/admin/study-materials') // Replace with your API endpoint
+            .then(response => response.json())
+            .then(data => {
+                // Clear previous data
+                materialsTableBody.innerHTML = '';
+                errorMessage.textContent = '';
+
+                if (data.materials && data.materials.length > 0) {
+                    data.materials.forEach(material => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${material.title}</td>
+                            <td>${material.description || 'N/A'}</td>
+                            <td><a href="${material.file_path}" target="_blank">Download</a></td>
+                            <td>${material.class_name || 'General'}</td>
+                        `;
+                        materialsTableBody.appendChild(row);
+                    });
+                } else {
+                    errorMessage.textContent = 'No study materials found.';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching study materials:', error);
+                errorMessage.textContent = 'An error occurred while fetching the study materials. Please try again later.';
+            });
+
+    </script>
+</body>
+</html>

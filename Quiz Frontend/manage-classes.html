@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Management</title>
+</head>
+<body>
+    <header>
+        <h1>Class Management</h1>
+    </header>
+    <main>
+        <!-- Add Class Form -->
+        <h2>Add New Class</h2>
+        <form id="add-class-form">
+            <label for="class-name">Class Name:</label><br>
+            <input type="text" id="class-name" name="class-name" placeholder="Enter class name" required><br><br>
+
+            <label for="admin-name">Admin Name:</label><br>
+            <input type="text" id="admin-name" name="admin-name" disabled><br><br>
+
+            <button type="submit">Add Class</button>
+        </form>
+
+        <!-- Edit Class Form -->
+        <h2>Edit Class</h2>
+        <form id="edit-class-form" style="display: none;">
+            <label for="edit-class-name">Class Name:</label><br>
+            <input type="text" id="edit-class-name" name="edit-class-name" required><br><br>
+
+            <label for="edit-admin-name">Admin Name:</label><br>
+            <input type="text" id="edit-admin-name" name="edit-admin-name" disabled><br><br>
+
+            <input type="hidden" id="edit-class-id">
+            <button type="submit">Update Class</button>
+        </form>
+
+        <!-- Classes Table -->
+        <h2>Existing Classes</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Class Name</th>
+                    <th>Admin Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="class-list">
+                <!-- Dynamic rows will be added here -->
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:5000/api/admin';
+        let adminName = ''; // Store admin's name
+
+        // Fetch admin name based on admin id = 1
+        async function loadAdminName() {
+            try {
+                const response = await fetch(`${apiUrl}/admin/1`);
+                const admin = await response.json();
+                adminName = admin.name; // Store admin name
+
+                // Populate both Add and Edit forms with the admin name
+                document.getElementById('admin-name').value = adminName;
+                document.getElementById('edit-admin-name').value = adminName;
+            } catch (error) {
+                console.error('Error fetching admin:', error);
+            }
+        }
+
+        // Fetch all classes and display them
+        async function loadClasses() {
+            try {
+                const response = await fetch(`${apiUrl}/class/classes`);
+                const classes = await response.json();
+
+                const classTable = document.getElementById('class-list');
+                classTable.innerHTML = ''; // Clear existing rows
+
+                classes.forEach(cls => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${cls.name}</td>
+                        <td>${adminName}</td>
+                        <td>
+                            <button onclick="editClass(${cls.id})">Edit</button>
+                            <button onclick="deleteClass(${cls.id})">Delete</button>
+                        </td>
+                    `;
+                    classTable.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        // Add a new class
+        document.getElementById('add-class-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            const name = document.getElementById('class-name').value;
+            const createdBy = 1; // Admin ID is always 1
+
+            const newClass = { name, created_by: createdBy };
+
+            try {
+                const response = await fetch(`${apiUrl}/class/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newClass),
+                });
+
+                if (response.ok) {
+                    alert('Class added successfully');
+                    loadClasses();
+                } else {
+                    alert('Failed to add class');
+                }
+            } catch (error) {
+                console.error('Error adding class:', error);
+            }
+        });
+
+        // Edit a class
+        async function editClass(classId) {
+            try {
+                const response = await fetch(`${apiUrl}/class/${classId}`);
+                const cls = await response.json();
+
+                // Show edit form
+                document.getElementById('edit-class-form').style.display = 'block';
+
+                // Populate form fields
+                document.getElementById('edit-class-name').value = cls.name;
+
+                // Save class ID for updates
+                document.getElementById('edit-class-id').value = classId;
+            } catch (error) {
+                console.error('Error editing class:', error);
+            }
+        }
+
+        // Update a class
+        document.getElementById('edit-class-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            const classId = document.getElementById('edit-class-id').value;
+            const name = document.getElementById('edit-class-name').value;
+            const createdBy = 1; // Admin ID is always 1
+
+            const updatedClass = { name };
+
+            try {
+                const response = await fetch(`${apiUrl}/class/${classId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedClass),
+                });
+
+                if (response.ok) {
+                    alert('Class updated successfully');
+                    // Hide the edit form
+                    document.getElementById('edit-class-form').style.display = 'none';
+                    loadClasses();
+                } else {
+                    alert('Failed to update class');
+                }
+            } catch (error) {
+                console.error('Error updating class:', error);
+            }
+        });
+
+        // Delete a class
+        async function deleteClass(classId) {
+            try {
+                const response = await fetch(`${apiUrl}/class/${classId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Class deleted successfully');
+                    loadClasses();
+                } else {
+                    alert('Failed to delete class');
+                }
+            } catch (error) {
+                console.error('Error deleting class:', error);
+            }
+        }
+
+        // Initial load
+        loadAdminName(); // Fetch admin name first
+        loadClasses(); // Then fetch classes
+    </script>
+</body>
+</html>

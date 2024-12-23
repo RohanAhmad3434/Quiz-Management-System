@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Management</title>
+    <style>
+         /* General Styling */
+         body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #007bff;
+            color: #fff;
+            text-align: center;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            color: #007bff;
+            margin-bottom: 10px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: center;
+        }
+
+        table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        table tr:hover {
+            background-color: #e9f5ff;
+        }
+
+        .actions button {
+            width: auto;
+            margin-right: 3px;
+            padding: 6px 10px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            main {
+                padding: 10px;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            input, select, button {
+                font-size: 0.8rem;
+                padding: 6px;
+            }
+
+            table th, table td {
+                padding: 5px 6px;
+                font-size: 0.8rem;
+            }
+
+            button {
+                font-size: 0.8rem;
+                padding: 6px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Student Management</h1>
+    </header>
+    <main>
+        <!-- Add Student Form -->
+        <h2>Add New Student</h2>
+        <form id="add-student-form">
+            <label for="user-name">Name:</label><br>
+            <input type="text" id="user-name" name="user-name" placeholder="Enter student name" required><br><br>
+
+            <label for="user-email">Email:</label><br>
+            <input type="email" id="user-email" name="user-email" placeholder="Enter student email" required><br><br>
+
+            <label for="user-password">Password:</label><br>
+            <input type="password" id="user-password" name="user-password" placeholder="Enter password" required><br><br>
+
+            <label for="user-class">Class:</label><br>
+            <select id="user-class" name="user-class">
+                <option value="">Select a class</option>
+            </select><br><br>
+
+            <button type="submit">Add User</button>
+        </form>
+
+        <!-- Edit Student Form -->
+        <h2>Edit Student</h2>
+        <form id="edit-student-form" style="display: none;">
+            <label for="edit-user-name">Name:</label><br>
+            <input type="text" id="edit-user-name" name="edit-user-name" required><br><br>
+
+            <label for="edit-user-email">Email:</label><br>
+            <input type="email" id="edit-user-email" name="edit-user-email" required><br><br>
+
+            <label for="edit-user-password">Password:</label><br>
+            <input type="password" id="edit-user-password" name="edit-user-password" placeholder="Enter new password" required><br><br>
+
+            <label for="edit-user-class">Class:</label><br>
+            <select id="edit-user-class" name="edit-user-class">
+                <option value="">Select a class</option>
+            </select><br><br>
+
+            <input type="hidden" id="edit-student-id">
+            <button type="submit">Update User</button>
+        </form>
+
+        <!-- Student Table -->
+        <h2>Existing Students</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Class</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="user-list">
+                <!-- Dynamic rows will be added here -->
+            </tbody>
+        </table>
+    </main>
+
+    <script>
+        const apiUrl = 'http://127.0.0.1:5000/api/admin';
+        let classList = []; // Store the mapping of class names and IDs
+
+        // Fetch all classes
+        async function loadClasses() {
+            try {
+                const response = await fetch(`${apiUrl}/classes`);
+                classList = await response.json();
+
+                const addClassDropdown = document.getElementById('user-class');
+                const editClassDropdown = document.getElementById('edit-user-class');
+
+                [addClassDropdown, editClassDropdown].forEach(dropdown => {
+                    dropdown.innerHTML = `<option value="">Select a class</option>`;
+                    classList.forEach(cls => {
+                        const option = document.createElement('option');
+                        option.value = cls.id; // Use class_id as the value
+                        option.textContent = cls.name; // Display class_name
+                        dropdown.appendChild(option);
+                    });
+                });
+            } catch (error) {
+                console.error('Error loading classes:', error);
+            }
+        }
+
+        // Fetch all students and display them
+        async function loadStudents() {
+            try {
+                const response = await fetch(`${apiUrl}/students`);
+                const students = await response.json();
+
+                const userTable = document.getElementById('user-list');
+                userTable.innerHTML = ''; // Clear existing rows
+
+                students.forEach(student => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${student.name}</td>
+                        <td>${student.email}</td>
+                        <td>${student.class_name || 'N/A'}</td>
+                        <td>
+                            <button onclick="editStudent(${student.id})">Edit</button>
+                            <button onclick="deleteStudent(${student.id})">Delete</button>
+                        </td>
+                    `;
+                    userTable.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading students:', error);
+            }
+        }
+
+        // Add a new student
+        document.getElementById('add-student-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            const name = document.getElementById('user-name').value;
+            const email = document.getElementById('user-email').value;
+            const password = document.getElementById('user-password').value;
+            const classId = document.getElementById('user-class').value;
+
+            const newStudent = { name, email, password, class_id: classId || null };
+
+            try {
+                const response = await fetch(`${apiUrl}/student/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newStudent),
+                });
+
+                if (response.ok) {
+                    alert('Student added successfully');
+                    loadStudents();
+                } else {
+                    alert('Failed to add student');
+                }
+            } catch (error) {
+                console.error('Error adding student:', error);
+            }
+        });
+
+        // Edit a student
+        async function editStudent(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/student/${studentId}`);
+                const student = await response.json();
+
+                // Show edit form
+                document.getElementById('edit-student-form').style.display = 'block';
+
+                // Populate form fields
+                document.getElementById('edit-user-name').value = student.name;
+                document.getElementById('edit-user-email').value = student.email;
+                document.getElementById('edit-user-password').value = student.password || '';
+                document.getElementById('edit-user-class').value = student.class_id || '';
+
+                // Save student ID for updates
+                document.getElementById('edit-student-id').value = studentId;
+            } catch (error) {
+                console.error('Error editing student:', error);
+            }
+        }
+
+        // Update a student
+        document.getElementById('edit-student-form').addEventListener('submit', async event => {
+            event.preventDefault();
+            const studentId = document.getElementById('edit-student-id').value;
+            const name = document.getElementById('edit-user-name').value;
+            const email = document.getElementById('edit-user-email').value;
+            const password = document.getElementById('edit-user-password').value;
+            const classId = document.getElementById('edit-user-class').value;
+
+            if (!password.trim()) {
+                alert('Please enter a new password.');
+                return;
+            }
+
+            const updatedStudent = { 
+                name, 
+                email, 
+                password: password, 
+                class_id: classId || null 
+            };
+
+            try {
+                const response = await fetch(`${apiUrl}/student/${studentId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedStudent),
+                });
+
+                if (response.ok) {
+                    alert('Student updated successfully');
+                    // Hide the edit form
+                    document.getElementById('edit-student-form').style.display = 'none';
+                    loadStudents();
+                } else {
+                    alert('Failed to update student');
+                }
+            } catch (error) {
+                console.error('Error updating student:', error);
+            }
+        });
+
+        // Delete a student
+        async function deleteStudent(studentId) {
+            try {
+                const response = await fetch(`${apiUrl}/student/${studentId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Student deleted successfully');
+                    loadStudents();
+                } else {
+                    alert('Failed to delete student');
+                }
+            } catch (error) {
+                console.error('Error deleting student:', error);
+            }
+        }
+
+        // Initial load
+        loadClasses();
+        loadStudents();
+    </script>
+</body>
+</html>
