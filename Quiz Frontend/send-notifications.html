@@ -27,7 +27,7 @@ h3 {
 }
 
 /* Forms */
-textarea, input[type="number"] {
+textarea, input[type="text"] {
     width: calc(100% - 20px);
     padding: 10px;
     margin-bottom: 10px;
@@ -119,7 +119,7 @@ td[colspan] {
         <h3>Send Notification to Class</h3>
         <form id="class-notification-form">
             <textarea id="class-message" placeholder="Enter message" required></textarea>
-            <input type="number" id="class-id" placeholder="Class ID" required>
+            <input type="text" id="class-id" placeholder="Class Name" required>
             <input type="hidden" id="admin-id" value="1"> <!-- Replace with dynamic admin ID -->
             <button type="submit">Send</button>
         </form>
@@ -130,7 +130,7 @@ td[colspan] {
         <h3>Send Notification to Student</h3>
         <form id="student-notification-form">
             <textarea id="student-message" placeholder="Enter message" required></textarea>
-            <input type="number" id="student-id" placeholder="Student ID" required>
+            <input type="text" id="student-id" placeholder="Student Name" required>
             <input type="hidden" id="admin-id" value="1"> <!-- Replace with dynamic admin ID -->
             <button type="submit">Send</button>
         </form>
@@ -176,39 +176,79 @@ td[colspan] {
 
 
     <script>
-        // Handle Class Notification
-        document.getElementById('class-notification-form').addEventListener('submit', e => {
-            e.preventDefault();
-            const message = document.getElementById('class-message').value;
-            const classId = document.getElementById('class-id').value;
-            const adminId = document.getElementById('admin-id').value;
+      // Function to fetch Class ID by Class Name
+    function fetchClassIdByName(className) {
+        return fetch(`http://127.0.0.1:5000/api/admin/class/id?name=${encodeURIComponent(className)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.id) {
+                    return data.id; // Assuming API returns { id: ... }
+                } else {
+                    throw new Error('Class not found');
+                }
+            });
+    }
 
+    // Function to fetch Student ID by Student Name 
+    function fetchStudentIdByName(studentName) {
+        return fetch(`http://127.0.0.1:5000/api/admin/student/id?name=${encodeURIComponent(studentName)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.id) {
+                    return data.id; // Assuming API returns { id: ... }
+                } else {
+                    throw new Error('Student not found');
+                }
+            });
+    }
+
+    // Handle Class Notification
+    document.getElementById('class-notification-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const message = document.getElementById('class-message').value;
+        const className = document.getElementById('class-id').value; // Now takes class name
+        const adminId = document.getElementById('admin-id').value;
+
+        try {
+            const classId = await fetchClassIdByName(className);
             fetch('http://127.0.0.1:5000/api/admin/notifications/class', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, class_id: classId, created_by: adminId })
-            }).then(response => response.json()).then(data => {
-                alert(data.message);
-                fetchClassNotifications(); // Refresh notifications
-            });
-        });
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    fetchClassNotifications(); // Refresh notifications
+                });
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    });
 
-        // Handle Student Notification
-        document.getElementById('student-notification-form').addEventListener('submit', e => {
-            e.preventDefault();
-            const message = document.getElementById('student-message').value;
-            const studentId = document.getElementById('student-id').value;
-            const adminId = document.getElementById('admin-id').value;
+    // Handle Student Notification
+    document.getElementById('student-notification-form').addEventListener('submit', async e => {
+        e.preventDefault();
+        const message = document.getElementById('student-message').value;
+        const studentName = document.getElementById('student-id').value; // Now takes student name
+        const adminId = document.getElementById('admin-id').value;
 
+        try {
+            const studentId = await fetchStudentIdByName(studentName);
             fetch('http://127.0.0.1:5000/api/admin/notifications/student', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message, student_id: studentId, created_by: adminId })
-            }).then(response => response.json()).then(data => {
-                alert(data.message);
-                fetchStudentNotifications(); // Refresh notifications
-            });
-        });
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    fetchStudentNotifications(); // Refresh notifications
+                });
+        } catch (err) {
+            alert('Error: ' + err.message);
+        }
+    });
 
 
 

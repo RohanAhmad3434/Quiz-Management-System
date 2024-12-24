@@ -1123,3 +1123,51 @@ def view_student_notifications():
         cursor.close()
         conn.close()
 
+
+
+
+
+#                --------------------- ----------------------- -------------------
+
+# Fetch Class ID by Class Name
+@admin_bp.route('/class/id', methods=['GET'])
+def get_class_id_by_name():
+    """Retrieve a class ID by its name."""
+    class_name = request.args.get('name', '').strip()
+    if not class_name:
+        return jsonify({"error": "Class name is required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT id FROM classes WHERE name = %s LIMIT 1"
+    cursor.execute(query, (class_name,))
+    class_record = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if class_record:
+        return jsonify({"id": class_record['id']}), 200
+    else:
+        return jsonify({"error": "Class not found"}), 404
+
+
+# Fetch Student ID by Student Name
+@admin_bp.route('/student/id', methods=['GET'])
+def get_student_id_by_name():
+    """Retrieve a student ID by their name."""
+    student_name = request.args.get('name', '').strip()
+    if not student_name:
+        return jsonify({"error": "Student name is required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT id FROM students WHERE name = %s LIMIT 1"
+    cursor.execute(query, (student_name,))
+    student_record = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if student_record:
+        return jsonify({"id": student_record['id']}), 200
+    else:
+        return jsonify({"error": "Student not found"}), 404
