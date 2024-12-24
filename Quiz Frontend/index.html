@@ -28,17 +28,25 @@
             top: 10px;
             text-align: center;
             width: 100%;
+            padding: 10px 0;
+            color: white; /* White text */
+            font-size: 1.5rem; /* Responsive font size */
+            font-weight:bolder; /* Bold text for emphasis */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            z-index: 1000; /* Ensure header stays on top */
         }
 
         header h1 {
             font-size: 2rem;
             color: #007BFF;
             margin: 0;
+            font-weight:bolder;
         }
 
         h1 {
             font-size: 1.8rem;
             margin-bottom: 20px;
+            font-weight:bolder;
         }
 
         main {
@@ -124,7 +132,7 @@
 
         <!-- Login Form (Initially Hidden) -->
         <div id="login-form">
-            <h2>Login</h2>
+            <h2>Enter Credentials</h2>
             <form id="login-form-action">
                 <label for="email">Email:</label><br>
                 <input type="email" id="email" name="email" required><br><br>

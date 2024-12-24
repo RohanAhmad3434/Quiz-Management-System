@@ -4,6 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class Management</title>
+    <style>
+        /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 20px;
+    background-color: #007BFF;
+    color: white;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+header h1 {
+    margin: 0;
+}
+
+h2 {
+    color: #007BFF;
+    margin-bottom: 10px;
+}
+
+label {
+    font-weight: bold;
+}
+
+input[type="text"], button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+input[type="text"]:disabled {
+    background-color: #e9ecef;
+}
+
+button {
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+}
+
+th, td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+th {
+    background-color: #007BFF;
+    color: white;
+    text-transform: uppercase;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+tr:hover {
+    background-color: #e8f7ff;
+    cursor: pointer;
+}
+
+td button {
+    width: auto;
+    margin: 0 5px;
+    padding: 5px 10px;
+    font-size: 14px;
+}
+
+td button:first-child {
+    background-color: #28a745; /* Edit button */
+}
+
+td button:first-child:hover {
+    background-color: #218838;
+}
+
+td button:last-child {
+    background-color: #dc3545; /* Delete button */
+}
+
+td button:last-child:hover {
+    background-color: #c82333;
+}
+
+/* Forms */
+form {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+    </style>
 </head>
 <body>
     <header>
