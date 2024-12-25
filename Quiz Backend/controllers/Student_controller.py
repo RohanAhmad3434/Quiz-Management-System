@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
-from models.db_connection import get_db_connection  # Adjust the import based on your actual project structure
+from models.db_connection import get_db_connection
+import uuid
+import subprocess
 
 student_bp = Blueprint('student_bp', __name__)
 
@@ -14,20 +16,77 @@ def student_login():
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
 
-    # Connect to the database
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    
-    query = "SELECT id, password FROM students WHERE email = %s"
-    cursor.execute(query, (email,))
-    student = cursor.fetchone()
-    cursor.close()
-    conn.close()
 
-    if not student or student['password'] != password:
-        return jsonify({"error": "Invalid email or password"}), 401
+    try:
+        # Fetch student details
+        query = "SELECT id, password FROM students WHERE email = %s"
+        cursor.execute(query, (email,))
+        student = cursor.fetchone()
 
-    return jsonify({"message": "Login successful", "id": student['id']}), 200
+        if not student or student['password'] != password:
+            return jsonify({"error": "Invalid email or password"}), 401
+
+        student_id = student['id']
+
+        # Check if a session already exists
+        cursor.execute("SELECT session_token FROM sessions WHERE student_id = %s", (student_id,))
+        existing_session = cursor.fetchone()
+
+        if existing_session:
+            return jsonify({"error": "You are already logged in on another device"}), 403
+
+        # Generate a unique session token
+        session_token = str(uuid.uuid4())
+
+        # Insert new session token into the database
+        cursor.execute(
+            "INSERT INTO sessions (student_id, session_token) VALUES (%s, %s)",
+            (student_id, session_token)
+        )
+        conn.commit()
+
+        return jsonify({
+            "message": "Login successful",
+            "id": student_id,
+            "session_token": session_token
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+# Student Logout API
+@student_bp.route('/logout', methods=['POST'])
+def student_logout():
+    """Logout for Student"""
+    data = request.json
+    session_token = data.get('session_token')
+
+    if not session_token:
+        return jsonify({"error": "Session token is required"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # Remove session token from the database
+        cursor.execute("DELETE FROM sessions WHERE session_token = %s", (session_token,))
+        conn.commit()
+
+        return jsonify({"message": "Logout successful"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
 
 
 
@@ -176,7 +235,28 @@ def submit_quiz_result(student_id, quiz_id):
             VALUES (%s, %s, %s, %s, %s)
         """, (student_id, quiz_id, attempt_count + 1, score, feedback))
         conn.commit()
+        
+        try:
+            subprocess.run(
+                ['python', r'C:/Users/Abu Hurairah/Desktop/Quiz Project/Quiz Backend/google-sheet-integeration.py'], 
+                check=True, 
+                capture_output=True, 
+                text=True
+            )
+            print("google-sheet-intergeration file run successfully")
+        except FileNotFoundError as e:
+            return jsonify({"error": f"Google Sheets integration script not found: {str(e)}"}), 500
+        except subprocess.CalledProcessError as e:
+            return jsonify({
+                "error": "Failed to update Google Sheets.",
+                "details": e.stderr or str(e)
+            }), 500
+        except Exception as e:
+            return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
+
+      
+        
         return jsonify({"message": "Quiz submitted successfully", "score": score, "feedback": feedback}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500

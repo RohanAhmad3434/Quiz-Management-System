@@ -195,9 +195,12 @@
 
             if (response.ok) {
                 alert(result.message);
+                localStorage.setItem('session_token', result.session_token); // Save session token
+                
                 if (loginType === 'admin') {
                     window.location.href = 'admin.html?id=' + result.id;
                 } else {
+                  
                     window.location.href = 'student.html?id=' + result.id;
                 }
             } else {

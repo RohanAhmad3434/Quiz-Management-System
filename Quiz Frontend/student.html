@@ -140,10 +140,15 @@
                     <button type="submit">View Notification</button>
                 </form>
             </div>
+
+
             <!-- Button to log out -->
-            <form action="index.html" method="get">
+            <button type="button" class="logout-button" onclick="logout()">Logout</button>
+
+            <!-- Button to log out -->
+            <!-- <form action="index.html" method="get">
                 <button type="submit" class="logout-button">Logout</button>
-            </form>
+            </form> -->
         </div>
     </nav>
     <main>
@@ -168,6 +173,42 @@
         alert("Student ID is missing. Please log in again.");
         window.location.href = "index.html";
     }
+
+    console.log("session token is :  ",localStorage.getItem('session_token'));
+    async function logout() {
+        const sessionToken = localStorage.getItem('session_token');
+    
+        if (!sessionToken) {
+            alert("No session token found. Please log in again.");
+            window.location.href = "index.html";
+            return;
+        }
+    
+        try {
+            const response = await fetch('http://127.0.0.1:5000/api/student/logout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ session_token: sessionToken }),
+            });
+    
+            const result = await response.json();
+    
+            if (response.ok) {
+                alert(result.message);
+                localStorage.removeItem('session_token'); // Clear session token
+                window.location.href = "index.html"; // Redirect to login page
+            } else {
+                alert(result.error);
+            }
+        } catch (error) {
+            console.error("Error during logout:", error);
+            alert("An error occurred while logging out.");
+        }
+    }
+    
+
     </script>
 
 
