@@ -1,10 +1,21 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
 from models.db_connection import get_db_connection
 import os
 from werkzeug.utils import secure_filename
+from flask_mail import Mail, Message
+
 admin_bp = Blueprint('admin', __name__)
 
+mail = Mail()
 
+# Helper function to send email
+def send_email(to_email, subject, body):
+    try:
+        msg = Message(subject, sender=current_app.config['MAIL_USERNAME'], recipients=[to_email])
+        msg.body = body
+        mail.send(msg)
+    except Exception as e:
+        raise Exception(f"Failed to send email: {e}")
 
 # Admin Login API
 @admin_bp.route('/login', methods=['POST'])
@@ -996,19 +1007,43 @@ def send_class_notification():
         return jsonify({"error": "All fields are required"}), 400
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
+        # Fetch all students in the specified class
+        cursor.execute("""
+            SELECT name, email
+            FROM students
+            WHERE class_id = %s
+        """, (class_id,))
+        students = cursor.fetchall()
+
+        if not students:
+            return jsonify({"error": "No students found for the specified class"}), 404
+
+        # Insert the notification into the class_notifications table
         cursor.execute("""
             INSERT INTO class_notifications (message, class_id, created_by)
             VALUES (%s, %s, %s)
         """, (message, class_id, admin_id))
         conn.commit()
-        return jsonify({"message": "Notification sent to class"}), 201
+
+        # Send emails to each student
+        for student in students:
+            student_email = student['email']
+            student_name = student['name']
+
+            # Send email to the student
+            subject = "New Class Notification"
+            body = f"Dear {student_name},\n\n{message}\n\nBest regards,\nAdmin Team"
+            send_email(student_email, subject, body)
+
+        return jsonify({"message": "Notification sent to class and emails delivered to all students"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
+
 
 
 
@@ -1024,19 +1059,36 @@ def send_student_notification():
         return jsonify({"error": "All fields are required"}), 400
 
     conn = get_db_connection()
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
     try:
+        # Fetch the student's email and name
+        cursor.execute("SELECT name, email FROM students WHERE id = %s", (student_id,))
+        student = cursor.fetchone()
+
+        if not student:
+            return jsonify({"error": "Student not found"}), 404
+
+        # Insert the notification into the database
         cursor.execute("""
             INSERT INTO student_notifications (message, student_id, created_by)
             VALUES (%s, %s, %s)
         """, (message, student_id, admin_id))
         conn.commit()
-        return jsonify({"message": "Notification sent to student"}), 201
+
+        # Send email to the student
+        student_email = student['email']
+        student_name = student['name']
+        subject = "New Notification from Admin"
+        body = f"Dear {student_name},\n\n{message}\n\nBest regards,\nAdmin Team"
+        send_email(student_email, subject, body)
+
+        return jsonify({"message": "Notification sent to student and email delivered"}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
         cursor.close()
         conn.close()
+
 
 
 
