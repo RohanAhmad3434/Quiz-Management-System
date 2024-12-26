@@ -184,7 +184,9 @@
                 body: formData
             })
             .then(response => response.json())
+            console.log("Response status:", response.status)
             .then(data => {
+                console.log("Response data:", data); // Log the API response
                 if (data.message) {
                     // Show success alert with the API response message
                     alert(data.message);

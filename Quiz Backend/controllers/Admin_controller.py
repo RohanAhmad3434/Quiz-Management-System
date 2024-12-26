@@ -1,8 +1,48 @@
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, send_file
 from models.db_connection import get_db_connection
 import os
 from werkzeug.utils import secure_filename
 from flask_mail import Mail, Message
+
+
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from google.oauth2.service_account import Credentials
+
+def upload_to_drive(file_path, folder_id):
+    """Upload a file to Google Drive and return its file ID."""
+    try:
+        print("Starting upload_to_drive function.")
+
+        # Authenticate using the service account credentials
+        print(f"Authenticating with service account credentials from: {file_path}")
+        creds = Credentials.from_service_account_file(
+            r'C:/Users/Abu Hurairah/Desktop/Quiz Project/Quiz Backend/controllers/service_account.json',
+            scopes=['https://www.googleapis.com/auth/drive']
+        )
+        service = build('drive', 'v3', credentials=creds)
+        print("Google Drive service initialized.")
+
+        # Prepare the file metadata and upload
+        print(f"Preparing to upload file: {file_path} to folder ID: {folder_id}")
+        file_metadata = {'name': os.path.basename(file_path), 'parents': [folder_id]}
+        media = MediaFileUpload(file_path, resumable=True)
+
+        # Uploading file
+        uploaded_file = service.files().create(
+            body=file_metadata, media_body=media, fields='id'
+        ).execute()
+
+        # Get the uploaded file ID
+        file_id = uploaded_file.get('id')
+        print(f"File uploaded successfully. File ID: {file_id}")
+
+        return file_id
+    except Exception as e:
+        print("An error occurred during the file upload.")
+        print(f"Error: {e}")
+        return None  # Return None or handle the error as required
+
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -704,13 +744,10 @@ def delete_assignment(assignment_id):
         cursor.close()
         conn.close()
         
-        
-        
-
-        
-        
-#                  Quiz-class Assignment Apis
-
+    
+    
+    
+#              --------------------------    Quiz-class Assignment Apis----------------------
 
 
 @admin_bp.route('/class-assignments/create', methods=['POST'])
@@ -911,13 +948,14 @@ def get_all_results():
 
 #             ----------------------- Upload study material api-------------------
 
-UPLOAD_FOLDER = 'uploads/study_materials'  # Directory to store files
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt'}
+UPLOAD_FOLDER = os.path.join(os.getcwd(), 'uploads', 'study_materials')  # Absolute path
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'ppt', 'pptx', 'txt', 'xlsx'}
 
 # Ensure the upload folder exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def allowed_file(filename):
+    """Check if the file type is allowed."""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @admin_bp.route('/study-materials/upload', methods=['POST'])
@@ -935,27 +973,53 @@ def upload_study_material():
     if not allowed_file(file.filename):
         return jsonify({"error": "File type not allowed."}), 400
 
+    # Save the file temporarily
     filename = secure_filename(file.filename)
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(file_path)
+    local_file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(local_file_path)
+    print(f"File saved locally at {local_file_path}")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
     try:
-        # Insert study material record
-        query = """
-            INSERT INTO study_materials (title, description, file_path, class_id, uploaded_by)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (title, description, file_path, class_id, admin_id))
-        conn.commit()
+        print("Saving file locally...")
+        # Upload file to Google Drive
+        folder_id = "15tm2g81xTv0H2UYv_pYnnvwc-D8juZLr"  # Replace with your Drive folder ID
+        drive_file_id = upload_to_drive(local_file_path, folder_id)
+        if not drive_file_id:
+            raise ValueError("File upload to Google Drive failed. No file ID returned.")
+        print("File uploaded to Google Drive with ID:", drive_file_id)
 
-        return jsonify({"message": "Study material uploaded successfully.", "file_path": file_path}), 201
+        # Insert study material record into the database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO study_materials (title, description, file_path, file_drive_id, class_id, uploaded_by)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        # Save the file path and drive file ID
+        drive_file_link = f"https://drive.google.com/file/d/{drive_file_id}/view"
+        cursor.execute(query, (title, description, drive_file_link, drive_file_id, class_id, admin_id))
+        conn.commit()
+        print("Database insertion successful.")
+        # Only return a minimal success message
+        return jsonify({"message": "Study material uploaded successfully."}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
-        cursor.close()
-        conn.close()
+        if 'conn' in locals():
+            cursor.close()
+            conn.close()
+
+@admin_bp.route('/study-materials/download/<filename>', methods=['GET'])
+def download_study_material(filename):
+    """Serve the study material file for download."""
+    try:
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        if not os.path.exists(file_path):
+            return jsonify({"error": "File not found."}), 404
+
+        return send_file(file_path, as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
         
         
         
